@@ -34,12 +34,19 @@ class ImageViewFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        if (arguments?.getInt("position") == 0) {
-            imageView.setImageResource(R.drawable.statistics1)
-        } else if (arguments?.getInt("position") == 1) {
-            imageView.setImageResource(R.drawable.statistics2)
-        } else {
-            imageView.setImageResource(R.drawable.statistics3)
+        when {
+            arguments?.getInt("position") == 0 -> {
+                imageView.setImageResource(R.drawable.statistics1)
+            }
+            arguments?.getInt("position") == 1 -> {
+                imageView.setImageResource(R.drawable.statistics2)
+            }
+            arguments?.getInt("position") == 2 -> {
+                imageView.setImageResource(R.drawable.statistics3)
+            }
+            else -> {
+                imageView.setImageResource(R.drawable.statistics4)
+            }
         }
     }
 

@@ -19,7 +19,7 @@ class StatisticsActivity: AppCompatActivity() {
             }
 
             override fun getCount(): Int {
-                return 2
+                return 4
             }
         }
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
@@ -36,7 +36,7 @@ class StatisticsActivity: AppCompatActivity() {
             }
 
             override fun onPageSelected(position: Int) {
-                textView.text = "${position + 1} / 3"
+                textView.text = "${position + 1} / 4"
             }
 
         })
