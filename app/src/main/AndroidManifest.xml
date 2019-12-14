@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity" android:theme="@style/NoActionBarAppTheme">
         </activity>
-        <activity android:name=".SelectMatchActivity" android:label="Выбор матча">
+        <activity android:name=".SelectMatchActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".SelectRoundActivity" android:label="Выбор раунда" />
-        <activity android:name=".StatisticsActivity" />
+        <activity android:name=".StatisticsActivity" android:label="Статистика"/>
     </application>
 
 </manifest>
