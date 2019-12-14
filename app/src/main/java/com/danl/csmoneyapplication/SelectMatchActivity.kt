@@ -11,6 +11,7 @@ class SelectMatchActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.select_match_activity)
+        title = "Выбор матча"
         match.setOnClickListener {
             startActivity(Intent(this, SelectRoundActivity::class.java))
         }

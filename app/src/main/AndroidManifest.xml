@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".SelectRoundActivity" android:label="Выбор раунда" />
-        <activity android:name=".StatisticsActivity" android:label="Статистика"/>
+        <activity android:name=".StatisticsActivity" />
     </application>
 
 </manifest>
