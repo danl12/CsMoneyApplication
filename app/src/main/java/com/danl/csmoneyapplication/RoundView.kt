@@ -7,15 +7,6 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.preference.PreferenceManager
 import com.danl.csmoneyapplication.model.*
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.reflect.TypeToken
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 
@@ -27,54 +18,33 @@ class RoundView : View {
     private lateinit var c4Bitmap: Bitmap
     private lateinit var deathBitmap: Bitmap
     private var mapSize: Int = -1
-    private val playerPositions: List<PlayerPosition>
-    private var players: List<Player>? = null
-    private val bombPosition: BombPosition
-    private val events: List<Event>
-    private val roundEndState: RoundEndState
+    var playerPositions: List<PlayerPosition>? = null
+        set(value) {
+            field = value
+            postInvalidate()
+        }
+    var players: List<Player>? = null
+        set(value) {
+            field = value
+            postInvalidate()
+        }
+    var bombPosition: BombPosition? = null
+        set(value) {
+            field = value
+            postInvalidate()
+        }
+    var events: List<Event>? = null
+        set(value) {
+            field = value
+            postInvalidate()
+        }
+    var roundEndState: RoundEndState? = null
+        set(value) {
+            field = value
+            postInvalidate()
+        }
 
     private val paint = Paint()
-
-    init {
-        val gson = Gson()
-        val json = String(context.assets.open("round.json").readBytes())
-        val jsonObject = gson.fromJson(json, JsonObject::class.java)
-        val retrofit = Retrofit.Builder().baseUrl("http://193.187.175.194:8080/").addConverterFactory(GsonConverterFactory.create()).build()
-        retrofit.create(CsMoneyService::class.java).listPlayers().enqueue(object : Callback<List<Player>> {
-            override fun onFailure(call: Call<List<Player>>, t: Throwable) {
-                println(t)
-            }
-
-            override fun onResponse(call: Call<List<Player>>, response: Response<List<Player>>) {
-                println(response)
-                if (response.isSuccessful) {
-                    players = response.body() ?: return
-                    postInvalidate()
-                }
-            }
-
-        })
-        playerPositions = gson.fromJson(
-            jsonObject.getAsJsonArray("PlayersPositions"),
-            object : TypeToken<List<PlayerPosition>>() {}.type
-        )
-//        players = gson.fromJson(
-//            jsonObject.getAsJsonArray("Players"),
-//            object : TypeToken<List<Player>>() {}.type
-//        )
-        bombPosition = gson.fromJson(
-            jsonObject.getAsJsonArray("BombPositions").get(0).asJsonObject,
-            BombPosition::class.java
-        )
-        events = gson.fromJson(
-            jsonObject.getAsJsonArray("Events"),
-            object : TypeToken<List<Event>>() {}.type
-        )
-        roundEndState = gson.fromJson(
-            jsonObject.getAsJsonObject("RoundEndState"),
-            RoundEndState::class.java
-        )
-    }
 
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(
@@ -88,11 +58,7 @@ class RoundView : View {
         defStyleAttr: Int
     ) : super(context, attrs, defStyleAttr)
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-
-        mapSize = min(measuredWidth, measuredHeight)
-
+    private fun initBitmaps() {
         mapBitmap = Bitmap.createScaledBitmap(
             BitmapFactory.decodeResource(resources, R.drawable.map),
             mapSize,
@@ -125,6 +91,14 @@ class RoundView : View {
         )
     }
 
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        mapSize = min(measuredWidth, measuredHeight)
+
+        initBitmaps()
+    }
+
     private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
         val directionMatrix = Matrix()
         directionMatrix.postRotate(angle)
@@ -141,55 +115,55 @@ class RoundView : View {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (players != null) {
-            canvas.drawBitmap(mapBitmap, 0.0f, 0.0f, paint)
-            val frameCount = this.frameCount.get()
-            for (playerPosition in playerPositions) {
-                if (frameCount < playerPosition.xArray.size && frameCount < playerPosition.yArray.size) {
-                    canvas.drawBitmap(
-                        if (players!!.find { it.id == playerPosition.playerId }?.team == 3) rotateBitmap(
-                            ctPlayerBitmap,
-                            playerPosition.directions[frameCount]
-                        ) else rotateBitmap(tPlayerBitmap, playerPosition.directions[frameCount]),
-                        ((playerPosition.xArray[frameCount] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
-                        mapSize - ((playerPosition.yArray[frameCount] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
-                        paint
-                    )
-                }
-            }
-
-            if (frameCount > bombPosition.startFrame && frameCount < bombPosition.endFrame) {
+        canvas.drawBitmap(mapBitmap, 0.0f, 0.0f, paint)
+        val frameCount = this.frameCount.get()
+        for (playerPosition in playerPositions ?: return) {
+            if (frameCount < playerPosition.xArray.size && frameCount < playerPosition.yArray.size) {
                 canvas.drawBitmap(
-                    c4Bitmap,
-                    ((bombPosition.x[frameCount - bombPosition.startFrame] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
-                    mapSize - ((bombPosition.y[frameCount - bombPosition.startFrame] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
+                    if (players?.find { it.id == playerPosition.playerId }?.team == 3) rotateBitmap(
+                        ctPlayerBitmap,
+                        playerPosition.directions[frameCount]
+                    ) else rotateBitmap(tPlayerBitmap, playerPosition.directions[frameCount]),
+                    ((playerPosition.xArray[frameCount] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
+                    mapSize - ((playerPosition.yArray[frameCount] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
                     paint
                 )
-            } else if (frameCount < bombPosition.startFrame) {
+            }
+        }
+
+        if (bombPosition != null) {
+            if (frameCount > bombPosition!!.startFrame && frameCount < bombPosition!!.endFrame) {
                 canvas.drawBitmap(
                     c4Bitmap,
-                    ((bombPosition.x[0] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
-                    mapSize - ((bombPosition.y[0] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
+                    ((bombPosition!!.x[frameCount - bombPosition!!.startFrame] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
+                    mapSize - ((bombPosition!!.y[frameCount - bombPosition!!.startFrame] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
+                    paint
+                )
+            } else if (frameCount < bombPosition!!.startFrame) {
+                canvas.drawBitmap(
+                    c4Bitmap,
+                    ((bombPosition!!.x[0] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
+                    mapSize - ((bombPosition!!.y[0] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
                     paint
                 )
             } else {
                 canvas.drawBitmap(
                     c4Bitmap,
-                    ((bombPosition.x[bombPosition.x.size - 1] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
-                    mapSize - ((bombPosition.y[bombPosition.y.size - 1] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
+                    ((bombPosition!!.x[bombPosition!!.x.size - 1] + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
+                    mapSize - ((bombPosition!!.y[bombPosition!!.y.size - 1] + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
                     paint
                 )
             }
+        }
 
-            for (event in events) {
-                if (event.eventType == 1 && frameCount >= event.frameNumber) {
-                    canvas.drawBitmap(
-                        deathBitmap,
-                        ((event.data.victimPos.x + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
-                        mapSize - ((event.data.victimPos.y + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
-                        paint
-                    )
-                }
+        for (event in events ?: return) {
+            if (event.eventType == 1 && frameCount >= event.frameNumber) {
+                canvas.drawBitmap(
+                    deathBitmap,
+                    ((event.data.victimPos.x + 2560) * mapSize / 5120) + 560 * mapSize / 5120,
+                    mapSize - ((event.data.victimPos.y + 2560) * mapSize / 5120) - 960 * mapSize / 5120,
+                    paint
+                )
             }
         }
     }
@@ -206,7 +180,7 @@ class RoundView : View {
                 stopped = false
                 thread = Thread {
                     while (!stopped) {
-                        if (frameCount.get() < roundEndState.frameNumber) {
+                        if (frameCount.get() < roundEndState?.frameNumber ?: break) {
                             frameCount.incrementAndGet()
                             println(frameCount)
                             postInvalidate()
@@ -217,10 +191,10 @@ class RoundView : View {
                                 ).toLong()
                             )
                         } else {
-                            stop()
                             break
                         }
                     }
+                    stop()
                 }
                 thread!!.start()
             }
